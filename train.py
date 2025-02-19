@@ -2,6 +2,7 @@ import torch
 import os
 from torch.utils.data import DataLoader
 from utils.training import train, test
+import lava.lib.dl.slayer as slayer
 
 
 # Args
@@ -39,6 +40,7 @@ elif args.model == "snn":
   error = slayer.loss.SpikeRate(true_rate=0.5, false_rate=0.05, reduction='mean').to(args.device)
   classer = slayer.classifier.Rate.predict
 print(f'Parameters: {model.params():,}')
+optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
 
 
@@ -59,11 +61,6 @@ data_loader_test = torch.utils.data.DataLoader(
     shuffle=True,
     drop_last=True,
     pin_memory=True)
-
-
-# Learning Tools
-import lava.lib.dl.slayer as slayer
-optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
 
 

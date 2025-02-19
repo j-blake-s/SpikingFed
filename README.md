@@ -8,3 +8,13 @@ Github repository for Spiking Federated Learning
 - For a list of packages needed to run the network, take a look at reqs.txt.
 
 - You can install the necessary packages with "pip install -r reqs.txt"
+
+
+
+Examples run scripts:
+
+python train.py --model ann --dataset dvsgesture --device cuda:0
+python train.py --model ann --dataset cifar10dvs --device cuda:1
+
+python train.py --model snn --dataset dvsgesture --device cuda:2
+python train.py --model snn --dataset cifar10dvs --device cuda:3
