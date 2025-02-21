@@ -41,29 +41,30 @@ import torch  # Ensure this import is included
 
 CHANNEL_WARNING_PRINTED_TEST = False  # Declare this at the top of the script
 
-def test(model, data, pred, args):
+def test(model, data, pred, error, args):
     global CHANNEL_WARNING_PRINTED_TEST  # Declare global usage
 
     model.eval()
     total_samples = 0
     total_correct_samples = 0
-
+    total_loss = 0
     with torch.no_grad():
         for i, (images, labels) in enumerate(data):
             images = torch.tensor(images, dtype=torch.float32).to(args.device)
             labels = torch.tensor(labels, dtype=torch.int64).to(args.device)
 
-            if images.dim() == 4:  
-                images = images.unsqueeze(1)  
+            # if images.dim() == 4:  
+            #     images = images.unsqueeze(1)  
 
-            if images.shape[1] == 1:  
-                if not CHANNEL_WARNING_PRINTED_TEST:
-                    print(f"⚠️ Warning: Expected input channel=2, but got 1. Adjusting... (This warning will only appear once.)")
-                    CHANNEL_WARNING_PRINTED_TEST = True  
-                images = images.repeat(1, 2, 1, 1, 1)  
+            # if images.shape[1] == 1:  
+            #     if not CHANNEL_WARNING_PRINTED_TEST:
+            #         print(f"⚠️ Warning: Expected input channel=2, but got 1. Adjusting... (This warning will only appear once.)")
+            #         CHANNEL_WARNING_PRINTED_TEST = True  
+            #     images = images.repeat(1, 2, 1, 1, 1)  
 
             outputs = model(images)
 
+            total_loss += error(outputs, labels).cpu().data.item()
             total_samples += images.shape[0]
             correct_samples = torch.sum(pred(outputs) == labels).cpu().data.item()
             total_correct_samples += correct_samples
@@ -71,7 +72,7 @@ def test(model, data, pred, args):
             acc = total_correct_samples / total_samples
             print(f'\r\tBatch [{i+1}/{len(data)}] Validation: {acc:.2%}', end="")
 
-    return acc
+    return total_loss / i, acc
 
 
 

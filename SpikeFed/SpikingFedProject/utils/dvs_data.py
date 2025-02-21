@@ -65,15 +65,15 @@ def DvsGesture(path, num_users=5, transform=None):
     print(f"Loaded DVS Gesture dataset. Shape: {images.shape}")  # Debugging
 
     # Ensure the shape is (B, C, H, W, T)
-    if images.ndim == 4:  
-        images = np.expand_dims(images, axis=1) 
+    # if images.ndim == 4:  
+    #     images = np.expand_dims(images, axis=1) 
 
     # Ensure C=2
-    if images.shape[1] == 1:  
-        if not CHANNEL_WARNING_PRINTED:
-            print(f"⚠️ Warning: Expected input channel=2, but got 1. Adjusting... (This warning will only appear once.)")
-            CHANNEL_WARNING_PRINTED = True  # Set flag to True
-        images = np.repeat(images, 2, axis=1)  
+    # if images.shape[1] == 1:  
+    #     if not CHANNEL_WARNING_PRINTED:
+    #         print(f"⚠️ Warning: Expected input channel=2, but got 1. Adjusting... (This warning will only appear once.)")
+    #         CHANNEL_WARNING_PRINTED = True  # Set flag to True
+    #     images = np.repeat(images, 2, axis=1)  
 
     dataset = Wrapper(images, labels, transform=transform)
 

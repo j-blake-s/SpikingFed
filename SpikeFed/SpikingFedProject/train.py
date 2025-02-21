@@ -29,6 +29,7 @@ from utils.dvs_data import DvsGesture
 # Load dataset and create user partitions
 dataset_train, dict_users_train = DvsGesture(os.path.join(args.data_path, "train.npz"), num_users=args.num_users)
 dataset_test, dict_users_test = DvsGesture(os.path.join(args.data_path, "test.npz"), num_users=args.num_users)
+test_dataset = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True)
 #######################################################################################
 
 class DatasetSplit(Dataset):
@@ -77,7 +78,8 @@ class LocalUpdate(object):
                 optimizer.step()
 
                 epoch_loss += loss.item()
-                pred = outputs.argmax(dim=1, keepdim=True)  # Get predictions
+                pred = slayer.classifier.Rate.predict(outputs)
+                # pred = outputs.argmax(dim=1, keepdim=True)  # Get predictions
                 correct += pred.eq(labels.view_as(pred)).sum().item()
                 total += labels.size(0)
 
@@ -162,7 +164,7 @@ for epoch in range(args.epochs):
     model.load_state_dict(global_weights)  # Update global model
 
     # Global Evaluation After Aggregation
-    test_loss, test_acc = test(model, dataset_test, classer, args)  # Use the full test dataset
+    test_loss, test_acc = test(model, test_dataset, classer, error, args)  # Use the full test dataset
 
     # Store values
     train_loss_collect.append(sum(loss_locals) / len(loss_locals))  # Avg train loss
@@ -181,11 +183,11 @@ import pandas as pd
 from pandas import DataFrame
 
 # Ensure all lists are the same length
-min_length = min(len(acc_train_collect), len(acc_test_collect))
+min_length = min(len(train_acc_collect), len(test_acc_collect))
 
 round_process = list(range(1, min_length + 1))  # Ensure it matches the shortest list
-acc_train_collect = acc_train_collect[:min_length]  # Trim excess values
-acc_test_collect = acc_test_collect[:min_length]  # Trim excess values
+acc_train_collect = train_acc_collect[:min_length]  # Trim excess values
+acc_test_collect = test_acc_collect[:min_length]  # Trim excess values
 
 # Create DataFrame
 df = DataFrame({
