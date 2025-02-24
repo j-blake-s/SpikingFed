@@ -24,7 +24,7 @@ def SpkDense(in_, out_):
   )
 
 class SNN(nn.Module):
-  def __init__(self):
+  def __init__(self, args):
     super().__init__()
 
     self.conv = nn.ModuleList([
@@ -35,7 +35,7 @@ class SNN(nn.Module):
 
     self.dense = nn.ModuleList([
       SpkDense(64*2*2, 2056),
-      SpkDense(2056, 11),
+      SpkDense(2056, args.classes),
     ])
 
 

@@ -11,24 +11,39 @@ import copy
 # Args
 from utils.argparser import get_args
 args = get_args()
+args.classes = 10
 
 
 # Model
 from model.snn import SNN
 ####################
 #model = SNN().to(args.device)
-model = SNN().to(args.device)
+model = SNN(args).to(args.device)
 global_weights = model.state_dict()  # Store initial model weights
 ###################
 print(f'Parameters: {model.params():,}')
 
 
 # Data
-from utils.dvs_data import DvsGesture
+# from utils.dvs_data import DvsGesture
+from utils.cf10data import Cifar10DVS
 #######################################################################################
 # Load dataset and create user partitions
-dataset_train, dict_users_train = DvsGesture(os.path.join(args.data_path, "train.npz"), num_users=args.num_users)
-dataset_test, dict_users_test = DvsGesture(os.path.join(args.data_path, "test.npz"), num_users=args.num_users)
+def dataset_iid(dataset, num_users):
+    num_items = int(len(dataset) / num_users)
+    dict_users, all_idxs = {}, list(range(len(dataset)))
+    for i in range(num_users):
+        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=False))
+        all_idxs = list(set(all_idxs) - dict_users[i])
+    return dict_users
+
+dataset_train, dataset_test = Cifar10DVS(path="/data/CIFAR10DVS/dataset")
+dict_users_train = dataset_iid(dataset_train, args.num_users)
+dict_users_test = dataset_iid(dataset_test, args.num_users)
+
+# dataset_train, dict_users_train = DvsGesture(os.path.join(args.data_path, "train.npz"), num_users=args.num_users)
+# dataset_test, dict_users_test = DvsGesture(os.path.join(args.data_path, "test.npz"), num_users=args.num_users)
+
 test_dataset = DataLoader(dataset_test, batch_size=args.batch_size, shuffle=True)
 #######################################################################################
 
@@ -69,6 +84,7 @@ class LocalUpdate(object):
         for _ in range(self.local_epochs):  
             for images, labels in self.ldr_train:
                 images, labels = images.to(self.device), labels.to(self.device)
+                images = images.to(torch.float32)
                 optimizer.zero_grad()
                 
                 outputs = self.model(images)
@@ -148,7 +164,7 @@ for epoch in range(args.epochs):
     selected_clients = np.random.choice(range(args.num_users), max(1, int(args.frac * args.num_users)), replace=False)
 
     for client_id in selected_clients:
-        local_model = SNN().to(args.device)
+        local_model = SNN(args).to(args.device)
         local_model.load_state_dict(global_weights)  # Load global model weights
 
         # Perform local training on client's dataset
@@ -174,7 +190,7 @@ for epoch in range(args.epochs):
 
     print(f'\033[F\rEpoch [{epoch+1}/{args.epochs}] '
           f'Train Loss: {train_loss_collect[-1]:.4f}, Train Acc: {train_acc_collect[-1]:.2f}% '
-          f'| Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%')
+          f'| Test Loss: {test_loss:.4f}, Test Acc: {test_acc*100:.2f}%')
 
 
 
