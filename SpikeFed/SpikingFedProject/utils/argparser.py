@@ -13,7 +13,7 @@ def get_args():
     parser.add_argument('--data_path', type=str, default='/data/Hasti/DvsGesture/t16')
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--lr', type=float, default=0.0001)
-    parser.add_argument('--epochs', type=int, default=200)
+    parser.add_argument('--epochs', type=int, default=300)
 
     arguments = parser.parse_args()
     return arguments
